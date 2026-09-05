@@ -2135,15 +2135,22 @@ export default function App() {
                   >
                     <RotateCw className="w-4 h-4" />
                   </button>
-                  <a
-                    href={viewingAttachment.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-all text-xs font-bold flex items-center space-x-1 border border-blue-500/30 active:scale-95"
-                    title="Abrir arquivo externo / Baixar"
-                  >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </a>
+                  {(() => {
+                    const raw = viewingAttachment.url || '';
+                    const isCldPdf = raw.includes('cloudinary.com') && raw.toLowerCase().includes('.pdf');
+                    const extUrl = isCldPdf ? raw.replace(/\.pdf(\?.*)?$/i, '.jpg$1') : raw;
+                    return (
+                      <a
+                        href={extUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-all text-xs font-bold flex items-center space-x-1 border border-blue-500/30 active:scale-95"
+                        title="Abrir imagem em alta resolução em nova aba"
+                      >
+                        <ArrowUpRight className="w-4 h-4" />
+                      </a>
+                    );
+                  })()}
                   <button
                     onClick={() => setViewingAttachment(null)}
                     className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-95"
@@ -2240,15 +2247,22 @@ export default function App() {
                   {attachmentRotation !== 0 && <span>• Giro: {attachmentRotation}°</span>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <a
-                    href={viewingAttachment.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-400 hover:underline flex items-center gap-1 font-semibold"
-                  >
-                    <span>Abrir link original</span>
-                    <ArrowUpRight className="w-3 h-3" />
-                  </a>
+                  {(() => {
+                    const raw = viewingAttachment.url || '';
+                    const isCldPdf = raw.includes('cloudinary.com') && raw.toLowerCase().includes('.pdf');
+                    const extUrl = isCldPdf ? raw.replace(/\.pdf(\?.*)?$/i, '.jpg$1') : raw;
+                    return (
+                      <a
+                        href={extUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-400 hover:underline flex items-center gap-1 font-semibold"
+                      >
+                        <span>Abrir imagem em alta resolução</span>
+                        <ArrowUpRight className="w-3 h-3" />
+                      </a>
+                    );
+                  })()}
                   <button
                     onClick={() => setViewingAttachment(null)}
                     className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs active:scale-95 transition-all ml-2"
