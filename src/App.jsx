@@ -6,7 +6,7 @@ import {
   Edit3, Trash2, Filter, Clock, TrendingUp, TrendingDown, BarChart2, AlertCircle,
   Sparkles, Wallet, ShieldCheck, Activity, CreditCard, ArrowRight, RefreshCw,
   ShieldAlert, CheckCircle2, Percent, AlertTriangle, FileText, LogOut, Mail, Lock
-, ArrowDownCircle, ShoppingBag, Upload } from 'lucide-react';
+, ArrowDownCircle, ShoppingBag, Upload, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { 
   signInWithEmailAndPassword, 
@@ -65,6 +65,16 @@ export default function App() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateInfo, setUpdateInfo] = useState(null);
   const [viewingAttachment, setViewingAttachment] = useState(null);
+  const [attachmentZoom, setAttachmentZoom] = useState(1);
+  const [attachmentRotation, setAttachmentRotation] = useState(0);
+  const [attachmentError, setAttachmentError] = useState(false);
+
+  const handleOpenAttachment = (att) => {
+    setAttachmentZoom(1);
+    setAttachmentRotation(0);
+    setAttachmentError(false);
+    setViewingAttachment(att);
+  };
   const APP_VERSION = '1.0.2';
 
   useEffect(() => {
@@ -2063,7 +2073,7 @@ export default function App() {
 
         {/* Modal: Visualizador Nativo de Boletos e Anexos */}
         {viewingAttachment && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
             <div className={`w-full max-w-2xl rounded-3xl border ${cardBg} p-4 sm:p-5 flex flex-col max-h-[92vh] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200`}>
               {/* Modal Header */}
               <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
@@ -2080,18 +2090,39 @@ export default function App() {
                 </div>
 
                 <div className="flex items-center space-x-1.5 shrink-0">
+                  <button
+                    onClick={() => setAttachmentZoom(prev => Math.max(0.6, Math.round((prev - 0.2) * 10) / 10))}
+                    className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs active:scale-95"
+                    title="Diminuir Zoom"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setAttachmentZoom(prev => Math.min(3, Math.round((prev + 0.2) * 10) / 10))}
+                    className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs active:scale-95"
+                    title="Aumentar Zoom"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setAttachmentRotation(prev => (prev + 90) % 360)}
+                    className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-xs active:scale-95"
+                    title="Girar 90°"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                  </button>
                   <a
                     href={viewingAttachment.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-all text-xs font-bold flex items-center space-x-1 border border-blue-500/30"
-                    title="Abrir arquivo externo"
+                    className="p-2 rounded-xl bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-all text-xs font-bold flex items-center space-x-1 border border-blue-500/30 active:scale-95"
+                    title="Abrir arquivo externo / Baixar"
                   >
                     <ArrowUpRight className="w-4 h-4" />
                   </a>
                   <button
                     onClick={() => setViewingAttachment(null)}
-                    className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all"
+                    className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all active:scale-95"
                     title="Fechar Visualizador"
                   >
                     <X className="w-5 h-5" />
@@ -2100,41 +2131,79 @@ export default function App() {
               </div>
 
               {/* Content Area */}
-              <div className="flex-1 overflow-auto py-2 flex items-center justify-center bg-black/40 rounded-2xl my-2 border border-white/5">
+              <div className="flex-1 overflow-auto py-2 flex items-center justify-center bg-black/50 rounded-2xl my-2 border border-white/5 relative min-h-[340px]">
                 {(() => {
-                  const url = viewingAttachment.url.toLowerCase();
-                  const isPdf = url.includes('.pdf') || viewingAttachment.url.includes('/raw/upload') || viewingAttachment.url.includes('application/pdf');
+                  const rawUrl = viewingAttachment.url || '';
+                  const lowerUrl = rawUrl.toLowerCase();
+                  const isPdf = lowerUrl.includes('.pdf') || rawUrl.includes('/raw/upload') || rawUrl.includes('application/pdf');
+                  const isCloudinary = rawUrl.includes('cloudinary.com');
 
-                  if (isPdf) {
-                    const embedUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(viewingAttachment.url)}&embedded=true`;
+                  // Se for PDF no Cloudinary, o Cloudinary converte perfeitamente para JPG com alta qualidade,
+                  // eliminando a dependência do Google Docs que trava/bloqueia e garantindo exibição 100% nativa.
+                  const displayImgUrl = (isPdf && isCloudinary)
+                    ? rawUrl.replace(/\.pdf(\?.*)?$/i, '.jpg$1')
+                    : rawUrl;
+
+                  if (attachmentError) {
                     return (
-                      <iframe
-                        src={embedUrl}
-                        title={viewingAttachment.title}
-                        className="w-full h-[68vh] rounded-xl border-0 bg-white"
-                      />
-                    );
-                  } else {
-                    return (
-                      <img
-                        src={viewingAttachment.url}
-                        alt={viewingAttachment.title}
-                        className="max-h-[68vh] w-auto max-w-full object-contain rounded-xl shadow-lg select-none"
-                      />
+                      <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
+                        <FileText className="w-12 h-12 text-amber-400 opacity-80" />
+                        <p className="text-xs text-slate-300">
+                          {isPdf ? 'Documento em formato PDF.' : 'Não foi possível carregar a imagem diretamente.'}
+                        </p>
+                        <a
+                          href={rawUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-all"
+                        >
+                          <ArrowUpRight className="w-4 h-4" />
+                          <span>Abrir Arquivo no Navegador / Leitor</span>
+                        </a>
+                      </div>
                     );
                   }
+
+                  return (
+                    <div className="w-full h-full flex items-center justify-center overflow-auto p-2">
+                      <img
+                        src={displayImgUrl}
+                        alt={viewingAttachment.title || 'Anexo'}
+                        onError={() => setAttachmentError(true)}
+                        style={{
+                          transform: `scale(${attachmentZoom}) rotate(${attachmentRotation}deg)`,
+                          transition: 'transform 0.2s ease-out'
+                        }}
+                        className="max-h-[66vh] max-w-full object-contain rounded-xl shadow-2xl select-none"
+                      />
+                    </div>
+                  );
                 })()}
               </div>
 
               {/* Footer */}
               <div className="flex justify-between items-center pt-2 text-[10px] text-slate-400 shrink-0">
-                <span className="truncate mr-2">Visualizando documento diretamente no app</span>
-                <button
-                  onClick={() => setViewingAttachment(null)}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs active:scale-95 transition-all"
-                >
-                  Fechar
-                </button>
+                <div className="flex items-center gap-2">
+                  <span>Zoom: {Math.round(attachmentZoom * 100)}%</span>
+                  {attachmentRotation !== 0 && <span>• Giro: {attachmentRotation}°</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={viewingAttachment.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-400 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <span>Abrir link original</span>
+                    <ArrowUpRight className="w-3 h-3" />
+                  </a>
+                  <button
+                    onClick={() => setViewingAttachment(null)}
+                    className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs active:scale-95 transition-all ml-2"
+                  >
+                    Fechar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2654,7 +2723,7 @@ export default function App() {
                           <>
                             <span className={`text-[10px] ${subText}`}>•</span>
                             <button
-                              onClick={(e) => { e.stopPropagation(); setViewingAttachment({ url: bill.fileUrl, title: bill.title }); }}
+                              onClick={(e) => { e.stopPropagation(); handleOpenAttachment({ url: bill.fileUrl, title: bill.title }); }}
                               className="text-[11px] font-bold text-amber-400 hover:text-amber-300 active:scale-95 transition-all flex items-center gap-1"
                               title="Visualizar Anexo no App"
                             >
@@ -3921,7 +3990,7 @@ export default function App() {
                         <div className="flex-1 flex justify-center">
                           {bill.fileUrl ? (
                             <button
-                              onClick={() => setViewingAttachment({ url: bill.fileUrl, title: bill.title })}
+                              onClick={() => handleOpenAttachment({ url: bill.fileUrl, title: bill.title })}
                               className="text-amber-400 hover:text-amber-300 p-1.5 bg-amber-500/15 rounded-xl flex items-center gap-1 text-[10px] font-bold border border-amber-500/30 active:scale-95 transition-all shadow-sm"
                               title="Visualizar Anexo"
                             >
@@ -4401,7 +4470,7 @@ export default function App() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
-                          onClick={() => setViewingAttachment({ url: selectedBill.fileUrl, title: selectedBill.title })}
+                          onClick={() => handleOpenAttachment({ url: selectedBill.fileUrl, title: selectedBill.title })}
                           className="px-2.5 py-1 text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-all active:scale-95"
                         >
                           Visualizar
