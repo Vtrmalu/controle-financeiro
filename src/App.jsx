@@ -1327,7 +1327,10 @@ export default function App() {
             title: n.title,
             body: n.desc,
             id: Math.abs(n.id.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0)),
-            schedule: { at: new Date(Date.now() + 1000 + (index * 500)) } // Escalonado pra não encavalar
+            schedule: { at: new Date(Date.now() + 1000 + (index * 500)) }, // Escalonado pra não encavalar
+            smallIcon: 'ic_stat_icon',
+            largeIcon: 'bazil_notif_large',
+            iconColor: '#3b82f6'
           }));
           
           await LocalNotifications.schedule({ notifications: notificationsToSchedule });
@@ -4225,7 +4228,10 @@ export default function App() {
                                 title: testNotif.title,
                                 body: testNotif.desc,
                                 id: Math.floor(Math.random() * 100000),
-                                schedule: { at: new Date(Date.now() + 100) }
+                                schedule: { at: new Date(Date.now() + 100) },
+                                smallIcon: 'ic_stat_icon',
+                                largeIcon: 'bazil_notif_large',
+                                iconColor: '#3b82f6'
                               }
                             ]
                           });

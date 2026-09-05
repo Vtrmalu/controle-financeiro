@@ -1,0 +1,12 @@
+{
+  "version": "1.0.2",
+  "apkUrl": "https://github.com/Vtrmalu/controle-financeiro/releases/latest/download/ControleFinanceiro.apk",
+  "changelog": [
+    "Redesign completo do card de Receitas Previstas (sem sobreposições)",
+    "Remoção de todos os caracteres e símbolos ? corrompidos",
+    "Novo algoritmo anti-colisão de legendas no Gráfico de Despesas",
+    "Sincronização 100% ativa em tempo real de categorias e notificações",
+    "Upload de comprovantes e boletos via Cloudinary",
+    "Atualizações diretas em 1 toque via GitHub Releases"
+  ]
+}

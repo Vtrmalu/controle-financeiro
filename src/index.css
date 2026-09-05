@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  margin: 0 auto;
+}
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Donut Chart Animations ─────────────────────────── */
+
+/* Flowing dash animation on leader lines */
+@keyframes dashFlow {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.leader-line-animated {
+  stroke-dasharray: 4 4;
+  animation: dashFlow 0.9s linear infinite;
+}
+
+/* Hover-expand: the entire donut SVG group scales out smoothly */
+.donut-wrapper {
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center center;
+  will-change: transform;
+}
+.donut-wrapper:hover {
+  transform: scale(1.09);
+}
+
+/* Scroll-collapse: chart "closes" toward center vertically */
+@keyframes donutClose {
+  0%   { transform: scaleY(1) scaleX(1); opacity: 1; }
+  100% { transform: scaleY(0.12) scaleX(0.85); opacity: 0; }
+}
+@keyframes donutOpen {
+  0%   { transform: scaleY(0.12) scaleX(0.85); opacity: 0; }
+  100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+}
+
+.donut-scroll-collapse {
+  animation: donutClose 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transform-origin: center center;
+}
+.donut-scroll-expand {
+  animation: donutOpen 0.52s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: center center;
+}
+
